@@ -68,6 +68,11 @@ const DragDrop = {
       }
 
       if (e.key === 'Escape') {
+        if (App._upgradeMode) {
+          App._upgradeMode = false;
+          Utils.showToast('已取消升级模式', 'info');
+          return;
+        }
         Renderer.selectedCargo = null;
         Renderer.renderPendingCargos(GameEngine.state);
         Utils.hideModal('modal-import');

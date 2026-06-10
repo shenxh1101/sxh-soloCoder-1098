@@ -116,13 +116,17 @@ const GameEngine = {
       return { success: false, message: '该位置无法放置，请选择其他位置' };
     }
 
-    const action = this._doPlaceCargo(cargo, row, col);
-    UndoManager.push(action);
+    const prevPendingCargos = Utils.deepClone(this.state.pendingCargos);
+    const prevGold = this.state.gold;
+    const prevScore = this.state.score;
+    const prevStep = this.state.step;
 
     const idx = this.state.pendingCargos.indexOf(cargo);
     if (idx >= 0) {
       this.state.pendingCargos.splice(idx, 1);
     }
+
+    const action = this._doPlaceCargo(cargo, row, col);
 
     this.state.step++;
     this.state.score += cargo.baseValue;
@@ -130,6 +134,12 @@ const GameEngine = {
 
     this._refillPendingCargos();
     this._checkOrdersAfterPlacement();
+
+    action.prevPendingCargos = prevPendingCargos;
+    action.prevGold = prevGold;
+    action.prevScore = prevScore;
+    action.prevStep = prevStep;
+    UndoManager.push(action);
 
     Grid.calculateHeatScores(this.state.grid);
     EventBus.emit('cargo:placed', cargo);
@@ -325,11 +335,19 @@ const GameEngine = {
         cargo.placed = false;
         cargo.position = null;
         this.state.cargos = this.state.cargos.filter(c => c.id !== cargo.id);
-        this.state.pendingCargos.push(cargo);
-        this.state.score -= cargo.baseValue;
-        this.state.gold -= cargo.baseValue;
-        this.state.step--;
       }
+
+      if (action.prevPendingCargos) {
+        this.state.pendingCargos = action.prevPendingCargos;
+      } else {
+        if (cargo) {
+          this.state.pendingCargos.push(cargo);
+        }
+      }
+
+      this.state.gold = action.prevGold;
+      this.state.score = action.prevScore;
+      this.state.step = action.prevStep;
     } else if (action.type === 'processOrder') {
       const info = CargoManager.getTypeInfo(action.cargoType);
       const cargo = CargoManager.createCargo(action.cargoType, 0);
@@ -352,9 +370,25 @@ const GameEngine = {
         order.reward = 0;
       }
 
+      if (CargoManager.turnoverCounts[action.cargoType] !== undefined
+          && CargoManager.turnoverCounts[action.cargoType] > 0) {
+        CargoManager.turnoverCounts[action.cargoType]--;
+      }
+
       this.state.score -= action.reward;
       this.state.gold -= (action.reward - action.moveCost);
       this.state.moveCostTotal -= action.moveCost;
+    } else if (action.type === 'expand') {
+      this.state.grid = action.prevGrid;
+      this.state.gridSize = { rows: action.prevRows, cols: action.prevCols };
+      this.state.gold = action.prevGold;
+
+      action.prevCargoPositions.forEach(prev => {
+        const cargo = CargoManager.getCargoById(this.state.cargos, prev.id);
+        if (cargo) {
+          cargo.position = prev.position ? { ...prev.position } : null;
+        }
+      });
     }
 
     Grid.calculateHeatScores(this.state.grid);
@@ -369,6 +403,15 @@ const GameEngine = {
     if (this.state.gold < cost) {
       return { success: false, message: `金币不足！需要 ${cost} 金币，当前 ${this.state.gold}` };
     }
+
+    const prevGrid = this.state.grid.map(row => row.map(cell => ({ ...cell })));
+    const prevRows = this.state.gridSize.rows;
+    const prevCols = this.state.gridSize.cols;
+    const prevGold = this.state.gold;
+    const prevCargoPositions = this.state.cargos.filter(c => c.placed).map(c => ({
+      id: c.id,
+      position: c.position ? { ...c.position } : null,
+    }));
 
     const result = Grid.expandGrid(this.state.grid, direction);
     this.state.grid = result.grid;
@@ -387,6 +430,16 @@ const GameEngine = {
     });
 
     this.state.gold -= cost;
+
+    UndoManager.push({
+      type: 'expand',
+      direction: direction,
+      prevGrid: prevGrid,
+      prevRows: prevRows,
+      prevCols: prevCols,
+      prevGold: prevGold,
+      prevCargoPositions: prevCargoPositions,
+    });
 
     EventBus.emit('grid:expanded', this.state.gridSize);
     EventBus.emit('score:changed', { score: this.state.score, gold: this.state.gold });
@@ -498,8 +551,13 @@ const GameEngine = {
       }
     });
 
-    OrderManager.orders = [];
+    OrderManager.orders = Array.isArray(data.orders) ? data.orders.map(o => ({ ...o })) : [];
     OrderManager.completedOrders = [];
+    OrderManager.orders.forEach(o => {
+      if (o.completed) {
+        OrderManager.completedOrders.push(o);
+      }
+    });
     UndoManager.clear();
 
     this.state = {
@@ -507,7 +565,7 @@ const GameEngine = {
       grid: data.grid,
       cargos: data.cargos,
       pendingCargos: data.pendingCargos,
-      orders: data.orders,
+      orders: OrderManager.orders,
       gold: data.gold,
       score: data.score,
       step: data.step,

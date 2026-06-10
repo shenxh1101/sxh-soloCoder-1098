@@ -87,6 +87,19 @@ const Renderer = {
     if (!state) return;
     const cell = state.grid[row][col];
 
+    if (App._upgradeMode) {
+      if (!cell.occupied) {
+        Utils.showToast('该格子为空，请点击已放置货物的格子进行升级', 'warning');
+        return;
+      }
+      const result = GameEngine.upgradeCell(row, col);
+      Utils.showToast(result.message, result.success ? 'success' : 'error');
+      if (result.success) {
+        App._upgradeMode = false;
+      }
+      return;
+    }
+
     if (cell.occupied) {
       this._handleOccupiedCellClick(cell, row, col);
     } else if (this.selectedCargo) {
