@@ -1,0 +1,18 @@
+{
+  "name": "新手入门",
+  "gridSize": 8,
+  "initialLayout": [],
+  "incomingCargo": [
+    { "type": "1x1", "count": 8 },
+    { "type": "1x2", "count": 5 },
+    { "type": "2x2", "count": 3 },
+    { "type": "1x3", "count": 2 }
+  ],
+  "orders": [
+    { "type": "1x1", "atStep": 3 },
+    { "type": "1x2", "atStep": 5 },
+    { "type": "2x2", "atStep": 8 },
+    { "type": "1x1", "atStep": 10 }
+  ],
+  "targetScore": 300
+}

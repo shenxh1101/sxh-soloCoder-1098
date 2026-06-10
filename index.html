@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仓库管理模拟器 - Warehouse Sim</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/grid.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <div id="app">
+    <div class="top-bar">
+      <span class="game-title">WAREHOUSE SIM</span>
+      <div class="toolbar">
+        <button class="btn" id="btn-undo" title="撤销 (Ctrl+Z)">↩ 撤销</button>
+        <button class="btn btn-amber" id="btn-expand" title="扩容仓库">⬛ 扩容</button>
+        <button class="btn btn-amber" id="btn-upgrade" title="升级货架">⬆ 升级货架</button>
+        <button class="btn" id="btn-heatmap" title="切换热力图 (H)">🔶 热力图</button>
+        <button class="btn btn-teal" id="btn-export" title="导出存档">📤 导出</button>
+        <button class="btn btn-teal" id="btn-import" title="导入存档/挑战">📥 导入</button>
+        <button class="btn btn-danger" id="btn-new-game" title="新游戏">🔄 新游戏</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="warehouse-zone">
+        <div class="pending-panel">
+          <div class="pending-title">待入库货物</div>
+          <div class="pending-cargos" id="pending-cargos"></div>
+        </div>
+
+        <div class="grid-wrapper">
+          <div class="grid-container">
+            <div class="warehouse-grid" id="warehouse-grid"></div>
+            <div class="heatmap-overlay" id="heatmap-overlay"></div>
+          </div>
+        </div>
+
+        <div class="hint-bar">
+          选择货物 → 点击网格放置 &nbsp;|&nbsp; <kbd>R</kbd> 旋转 &nbsp;|&nbsp; <kbd>Ctrl+Z</kbd> 撤销 &nbsp;|&nbsp; <kbd>H</kbd> 热力图 &nbsp;|&nbsp; <kbd>Esc</kbd> 取消选择
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div class="stats-panel">
+          <div class="stats-title">仓库状态</div>
+          <div class="stat-row">
+            <span class="stat-label">💰 金币</span>
+            <span class="stat-value highlight" id="stat-gold">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">⭐ 得分</span>
+            <span class="stat-value" id="stat-score">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">📦 空间使用</span>
+            <span class="stat-value" id="stat-usage">0%</span>
+          </div>
+          <div class="usage-bar-container">
+            <div class="usage-bar-fill" id="usage-bar" style="width: 0%"></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">🔄 周转率峰值</span>
+            <span class="stat-value" id="stat-turnover">暂无</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">👣 步数</span>
+            <span class="stat-value" id="stat-step">0</span>
+          </div>
+        </div>
+
+        <div class="order-panel">
+          <div class="stats-title">出库订单</div>
+          <div class="challenge-info" id="challenge-info"></div>
+          <div class="order-list" id="order-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <div class="modal" id="modal-expand">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <div class="modal-title">仓库扩容</div>
+      <div class="modal-body" id="expand-content">
+        <p>正在计算...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-export">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <div class="modal-title">导出数据</div>
+      <div class="modal-body">
+        <p>导出当前游戏存档或挑战关卡配置</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-teal" id="btn-confirm-export">📤 导出存档</button>
+        <button class="btn btn-amber" id="btn-export-challenge">🏆 导出挑战</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-import">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <div class="modal-title">导入数据</div>
+      <div class="modal-body">
+        <p>粘贴JSON存档或挑战数据，或选择文件导入</p>
+        <textarea id="import-json" placeholder='粘贴JSON存档或挑战数据...'></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="btn-file-import">📁 选择文件</button>
+        <button class="btn btn-teal" id="btn-confirm-import">📥 导入</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/event-bus.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/grid.js"></script>
+  <script src="js/cargo.js"></script>
+  <script src="js/order.js"></script>
+  <script src="js/undo.js"></script>
+  <script src="js/upgrade.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/heatmap.js"></script>
+  <script src="js/challenge.js"></script>
+  <script src="js/game-engine.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/drag-drop.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

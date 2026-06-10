@@ -1,0 +1,23 @@
+{
+  "name": "中级挑战",
+  "gridSize": 10,
+  "initialLayout": [],
+  "incomingCargo": [
+    { "type": "1x1", "count": 6 },
+    { "type": "1x2", "count": 4 },
+    { "type": "2x1", "count": 3 },
+    { "type": "2x2", "count": 4 },
+    { "type": "1x3", "count": 3 },
+    { "type": "L-RD", "count": 2 },
+    { "type": "L-LD", "count": 2 }
+  ],
+  "orders": [
+    { "type": "1x2", "atStep": 4 },
+    { "type": "2x2", "atStep": 6 },
+    { "type": "L-RD", "atStep": 8 },
+    { "type": "1x3", "atStep": 10 },
+    { "type": "2x2", "atStep": 12 },
+    { "type": "1x1", "atStep": 14 }
+  ],
+  "targetScore": 800
+}

@@ -1,0 +1,27 @@
+{
+  "name": "高级挑战",
+  "gridSize": 10,
+  "initialLayout": [],
+  "incomingCargo": [
+    { "type": "1x1", "count": 4 },
+    { "type": "1x2", "count": 3 },
+    { "type": "2x1", "count": 3 },
+    { "type": "2x2", "count": 3 },
+    { "type": "1x3", "count": 4 },
+    { "type": "3x1", "count": 2 },
+    { "type": "L-RD", "count": 3 },
+    { "type": "L-LD", "count": 3 }
+  ],
+  "orders": [
+    { "type": "2x2", "atStep": 3 },
+    { "type": "1x3", "atStep": 5 },
+    { "type": "L-RD", "atStep": 6 },
+    { "type": "1x2", "atStep": 7 },
+    { "type": "L-LD", "atStep": 9 },
+    { "type": "2x2", "atStep": 10 },
+    { "type": "3x1", "atStep": 12 },
+    { "type": "1x1", "atStep": 14 },
+    { "type": "1x3", "atStep": 15 }
+  ],
+  "targetScore": 1500
+}
